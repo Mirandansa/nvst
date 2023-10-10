@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+<style>
+  .container {
+    text-align: center;
+  }
+
+  .tradingview-widget-container {
+    display: inline-block; /* Change display property to inline-block */
+    margin: 10px;
+  }
+</style>
+</head>
+<body bgcolor="black">
+
+<div class="container">
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": 280,
+  "isTransparent": false,
+  "height": 400,
+  "symbol": "TVC:DXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:JXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:EXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:SXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:AXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+</div>
+
+<div class="container">
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": 280,
+  "isTransparent": false,
+  "height": 400,
+  "symbol": "TVC:CXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:ZXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+  "interval": "1D",
+  "width": "280",
+  "isTransparent": false,
+  "height": "400",
+  "symbol": "TVC:BXY",
+  "showIntervalTabs": true,
+  "locale": "en",
+  "colorTheme": "dark"
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
+
+
+</div>
+
+</body>
+</html>
