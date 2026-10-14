@@ -23,6 +23,7 @@ implementation:
       - hasClass
       - parseDate
       - findColumn
+      - findByClass
       - fetchHtml
       - NOT_FOUND
   StockAnalysis.gs:
