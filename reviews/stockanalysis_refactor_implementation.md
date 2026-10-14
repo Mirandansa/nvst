@@ -50,8 +50,8 @@ The per-page runner retains the 200-row cap, 5-minute budget, 20-row periodic fl
 Executed locally against the refactored files using Node.js (a harness, not the Apps Script runtime):
 
 - `node --check` on both `.gs` files after copying to temporary `.js` files: passed.
-- `node test_refactor.js`: **68 checks passed; 0 failed**.
-- The harness tests generic helpers, HTTP/result mapping, the three-driver × five-result × two-target-state policy matrix, the same matrix through the actual adapter wrappers, Icm eligibility in all refresh paths, row caps/flush/sleep behavior, public entrypoints, and the legacy dataset-specific 404 parser behavior.
+- `node test_refactor.js`: **218 checks passed; 0 failed**.
+- The harness tests generic helpers, HTTP/result mapping, the three-driver × five-result × two-target-state core policy matrix and the three-driver × six-dataset × five-result × two-target-state adapter-wrapper matrix, Icm eligibility in all refresh paths, row caps/flush/sleep behavior, public entrypoints, and the legacy dataset-specific 404 parser behavior.
 - Static dependency scan of `ScrapeCore.gs` for `_needsRefresh_`, `_saJdgNonEmpty_`, `SA_*` symbols and `Jdg`: zero matches.
 
 ## Explicit limitations / blocked acceptance gates
@@ -60,7 +60,7 @@ Executed locally against the refactored files using Node.js (a harness, not the 
 - `Utils.gs` was not supplied. `_needsRefresh_` is deliberately dependency-injected as an external adapter callback, but its original implementation and behavior have not been independently reviewed.
 - The remaining project files were not supplied; the project-wide symbol collision audit is incomplete.
 - No Google Apps Script deployment/runtime execution or live StockAnalysis request was performed.
-- The 68 checks are local synthetic/unit and adapter-wrapper tests. They are not a substitute for the blocked differential parser fixture gate or Apps Script runtime validation.
+- The 218 checks are local synthetic/unit and adapter-wrapper tests. They are not a substitute for the blocked differential parser fixture gate or Apps Script runtime validation.
 
 ## SHA-256
 
@@ -70,7 +70,7 @@ Hashes are computed over the exact UTF-8 file contents fetched from the submitte
 |---|---|
 | `ScrapeCore.gs` | `5aab37c5d081c9ce4646804f3afa1fb5058a0b39b4b799818b509aa4df7742d0` |
 | `StockAnalysis.gs` | `6b80f62d21d1d7324a0024689e8e13f67e18de725716e39fbac13016a593c21f` |
-| `test_refactor.js` | `373ff4897e874cba9e897abfa0747221d0293c80dccdd2c7054e3cb47db23b94` |
+| `test_refactor.js` | `e1cf40c2d2b62765b8f924ce210fb4f28438f4c90a12caaed3c17aeed13b3777` |
 
 ## Decision requested
 
