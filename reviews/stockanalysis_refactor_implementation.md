@@ -103,6 +103,6 @@ Hashes cover the exact source contents fetched from the delivered branch (UTF-8;
 |---|---|
 | ScrapeCore.gs | 5aab37c5d081c9ce4646804f3afa1fb5058a0b39b4b799818b509aa4df7742d0 |
 | StockAnalysis.gs | d4808b6a47955af558a79be14a8345983ed204d769b7dedf4cd1f6d2133f54e8 |
-| test_refactor.js | 2a2cbb2fcf2c604f984de6f99ea64b634716cfb3370ba81615fff2a2a57d8a59 |
+| test_refactor.js | 57ea9d60e2a526c77ce0c88340c531893ac80cdb826dbfd6ca3129f052f5cb77 |
 
 Keep status PROPOSED until pinned-fixture differential tests, Apps Script runtime execution, external dependency review and the project-wide collision audit are completed or explicitly waived by the project owner.
