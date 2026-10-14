@@ -42,6 +42,7 @@ check('generic HTML helpers', () => {
   assert.strictEqual(core.hasClass('<td class="alpha desktop-only">', 'desktop-only'), true);
   assert.strictEqual(core.hasClass('<td class="desktop-onlyish">', 'desktop-only'), false);
   assert.strictEqual(core.text('<p>Revenue&nbsp;&amp; profit<br>2</p>'), 'Revenue & profit 2');
+  assert.strictEqual(core.text('<div>visible<script>bad()</script><style>.x{}</style></div>'), 'visible');
   assert.strictEqual(core.elements('<table><tr><td>1</td></tr></table>', 'table').length, 1);
   assert.strictEqual(core.cells('<tr><th>A</th><td>2</td></tr>').length, 2);
   assert.strictEqual(core.innerHtml('<p class="x">value</p>', 'p'), 'value');
