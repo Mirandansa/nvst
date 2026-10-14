@@ -2,18 +2,70 @@
 
 ```yaml
 artifact: stockanalysis_scraper_refactor_implementation
-version: 0.2
+version: "0.3"
 status: PROPOSED
 protocol: project_work_protocol_compact_v1.1
-review_scope: DS round 2; GLM round 2
+review_round: 4
 implementation:
-  shared_refresh_runner: implemented
-  adapter_core_split: implemented
-  legacy_outcome_policies: encoded_per_driver
+  ScrapeCore.gs:
+    raw_source_path: src/ScrapeCore.gs
+    verified_line_count: 283
+    complete: true
+    exposes:
+      - runRefresh
+      - cleanCell
+      - elements
+      - innerHtml
+      - cells
+      - openingTag
+      - text
+      - attr
+      - hasClass
+      - parseDate
+      - findColumn
+      - fetchHtml
+      - NOT_FOUND
+  StockAnalysis.gs:
+    raw_source_path: src/StockAnalysis.gs
+    forecast_heading_regex_fixed: true
+    legacy_404_asymmetry_preserved: true
+  refresh_runner_contract:
+    signature: runRefresh(options)
+    injected_callbacks:
+      - eligibilityPredicate
+      - needsRefresh
+      - fetch
+      - write
+      - flush
+      - sleepAfter
+    runtime_options:
+      - rows
+      - maxRows
+      - timeBudgetMs
+      - flushEvery
+      - sleepMs
+      - policy
+    event_callbacks:
+      - onSelection
+      - onCapped
+      - onTimeBudget
+      - onException
+      - onFalse
+    policy_keys:
+      - onTransientFailure
+      - onEmptyExistingTransient
+      - onException
+      - onFalse
+      - onNotFound
 validation:
-  node_syntax_checks: passed
-  local_test_harness: passed
-  local_test_count: 68
+  node_syntax_checks: PASSED
+  local_test_count: 223
+  local_test_failures: 0
+  harness_prints_sha256_for_loaded_core_and_adapter: true
+  runner_policy_matrix: PASSED
+  adapter_symbol_contract: PASSED
+  core_boundary_scan: PASSED
+  forecast_heading_regression: PASSED
   pinned_html_fixture_differential: BLOCKED
   Apps_Script_runtime: NOT_RUN
   Utils_gs_dependency_review: BLOCKED
@@ -21,57 +73,36 @@ validation:
 acceptance: pending_independent_review
 ```
 
-## Submission files
+## Raw source files
 
-- `ScrapeCore.gs`: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-2026-10-14/src/ScrapeCore.gs
-- `StockAnalysis.gs`: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-2026-10-14/src/StockAnalysis.gs
-- `test_refactor.js`: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-2026-10-14/tests/test_refactor.js
+- ScrapeCore.gs: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-v0.3-2026-10-14/src/ScrapeCore.gs
+- StockAnalysis.gs: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-v0.3-2026-10-14/src/StockAnalysis.gs
+- Test harness: https://raw.githubusercontent.com/Mirandansa/nvst/stockanalysis-refactor-implementation-v0.3-2026-10-14/tests/test_refactor.js
 
-## Implementation summary
+## Corrections in this revision
 
-`ScrapeCore.gs` now owns reusable HTML/HTTP helpers, cell/date helpers, and `ScrapeCore.runRefresh`. The runner receives callbacks for row eligibility, refresh due-state, fetch behavior, writes/flushes and logging; runtime limits and row delays are parameters. It has no references to `_needsRefresh_`, `_saJdgNonEmpty_`, `SA_*` names, or `Jdg`.
+- Restored the forecast heading/table regex closing-tag backreference. The expression now uses the literal word-boundary escape and a closing-tag backreference, rather than control characters.
+- Added a regression check that associates both “Revenue Forecast” and “EPS Forecast” headings with their matching tables.
+- Added static checks proving every ScrapeCore symbol used by the adapter is exported and that the core has no _needsRefresh_, _saJdgNonEmpty_, SA_* or Jdg references.
+- Added observable runner-contract checks for due-state selection, eligibility, row caps, callbacks, writes, time-budget termination, periodic/final flushing, sleep gating and policy outcomes.
+- The harness emits SHA-256 values for the exact source strings it loads. The recorded values below are from the delivered branch contents.
 
-`StockAnalysis.gs` retains the site-specific URL construction, block detection, user agent/log prefix, currency symbols and placeholders, parsers, dataset functions, workbook sheet/column configuration and public entrypoints. `_saJdgNonEmpty_` is now top-level so all three refresh paths can call it. `_saRefreshTicker_`, `_refreshSA_Page_`, and `_forceRefreshSA_Page_` delegate their iteration and outcome handling to the shared runner with distinct policies.
+## Validation details
 
-### Encoded outcome policies
-
-| Driver | Transient null | Empty-target null | Thrown exception | `false` | `NOT_FOUND` |
-|---|---|---|---|---|---|
-| Ticker (`_saRefreshTicker_`) | overwrite with empty envelope | overwrite with empty envelope | overwrite with empty envelope | overwrite with empty envelope | serialize sentinel as data |
-| Per-page (`_refreshSA_Page_`) | preserve existing | overwrite with empty envelope | preserve existing or write empty envelope | preserve existing or write empty envelope | overwrite with empty envelope |
-| Force (`_forceRefreshSA_Page_`) | overwrite with empty envelope | overwrite with empty envelope | preserve existing | preserve existing | serialize sentinel as data |
-
-The implementation deliberately keeps the existing dataset 404 asymmetry: `SA_Icm`, `SA_Bal`, and `SA_Flo` return the sentinel; `SA_Nly`, `SA_Frc`, and `SA_Kpi` retain their parser TypeError path when the sentinel reaches string parsing. Uniform 404 handling is not silently introduced as a behavior change.
-
-The per-page runner retains the 200-row cap, 5-minute budget, 20-row periodic flush and 800-ms spacing. The ticker and force paths keep their 300-ms spacing and per-cell writes. The force path preserves the legacy no-sleep continuation after `null` and `false` results.
-
-## Validation evidence
-
-Executed locally against the refactored files using Node.js (a harness, not the Apps Script runtime):
-
-- `node --check` on both `.gs` files after copying to temporary `.js` files: passed.
-- `node test_refactor.js`: **218 checks passed; 0 failed**.
-- The harness tests generic helpers, HTTP/result mapping, the three-driver × five-result × two-target-state core policy matrix and the three-driver × six-dataset × five-result × two-target-state adapter-wrapper matrix, Icm eligibility in all refresh paths, row caps/flush/sleep behavior, public entrypoints, and the legacy dataset-specific 404 parser behavior.
-- Static dependency scan of `ScrapeCore.gs` for `_needsRefresh_`, `_saJdgNonEmpty_`, `SA_*` symbols and `Jdg`: zero matches.
-
-## Explicit limitations / blocked acceptance gates
-
-- No pinned live/historical StockAnalysis HTML fixtures were present in the provided materials. Therefore this submission does **not** claim byte-identical parser output against the pre-refactor parser. The required fixture/SHA-256 differential report remains blocked until the fixtures can be supplied or captured under an approved network-enabled test setup.
-- `Utils.gs` was not supplied. `_needsRefresh_` is deliberately dependency-injected as an external adapter callback, but its original implementation and behavior have not been independently reviewed.
-- The remaining project files were not supplied; the project-wide symbol collision audit is incomplete.
-- No Google Apps Script deployment/runtime execution or live StockAnalysis request was performed.
-- The 218 checks are local synthetic/unit and adapter-wrapper tests. They are not a substitute for the blocked differential parser fixture gate or Apps Script runtime validation.
+- Node syntax checks passed for the core and adapter after copying the .gs files to temporary .js paths; Node does not accept .gs as a direct --check filename.
+- The local harness completed with no failed checks. The authoritative count is recorded once in the YAML header and derives from the harness output.
+- The harness uses synthetic fixtures. No pinned real StockAnalysis HTML fixtures were supplied, so parser byte-equivalence against the pre-refactor implementation remains blocked.
+- No Google Apps Script runtime execution was performed. Utils.gs was not supplied, so _needsRefresh_ could not be independently reviewed. The rest of the project files were also unavailable, preventing a project-wide collision audit.
+- The legacy 404 asymmetry remains intentional: SA_Icm, SA_Bal, and SA_Flo return NOT_FOUND; SA_Nly, SA_Frc, and SA_Kpi retain their legacy TypeError path.
 
 ## SHA-256
 
-Hashes are computed over the exact UTF-8 file contents fetched from the submitted GitHub branch.
+Hashes cover the exact source contents fetched from the delivered branch (UTF-8; no terminal newline is appended by the source endpoint).
 
 | File | SHA-256 |
 |---|---|
-| `ScrapeCore.gs` | `5aab37c5d081c9ce4646804f3afa1fb5058a0b39b4b799818b509aa4df7742d0` |
-| `StockAnalysis.gs` | `6b80f62d21d1d7324a0024689e8e13f67e18de725716e39fbac13016a593c21f` |
-| `test_refactor.js` | `e1cf40c2d2b62765b8f924ce210fb4f28438f4c90a12caaed3c17aeed13b3777` |
+| ScrapeCore.gs | 5aab37c5d081c9ce4646804f3afa1fb5058a0b39b4b799818b509aa4df7742d0 |
+| StockAnalysis.gs | d4808b6a47955af558a79be14a8345983ed204d769b7dedf4cd1f6d2133f54e8 |
+| test_refactor.js | 2a2cbb2fcf2c604f984de6f99ea64b634716cfb3370ba81615fff2a2a57d8a59 |
 
-## Decision requested
-
-Review the implementation for design and behavioral equivalence. Keep status `PROPOSED` until the blocked fixture differential, external dependency review and runtime gates have been addressed or explicitly waived by the project owner. No claim of final acceptance is made here.
+Keep status PROPOSED until pinned-fixture differential tests, Apps Script runtime execution, external dependency review and the project-wide collision audit are completed or explicitly waived by the project owner.
