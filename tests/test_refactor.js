@@ -153,35 +153,40 @@ function makeSheet(initialData) {
   };
 }
 
-function runRealWrapper(driver, outcome, hadExisting) {
+const datasets = ['Nly', 'Frc', 'Icm', 'Bal', 'Flo', 'Kpi'];
+function runRealWrapper(driver, dataset, outcome, hadExisting) {
   const sheet = makeSheet(hadExisting ? '{"old":true}' : '');
   sandbox.SpreadsheetApp.getActiveSpreadsheet = () => ({ getSheetByName: () => sheet });
   sandbox._needsRefresh_ = () => true;
-  sandbox.SA_FUNCTIONS.Nly = () => {
+  sandbox.SA_FUNCTIONS[dataset] = () => {
     if (outcome === 'thrown') throw new Error('wrapper exception');
     if (outcome === 'null') return null;
     if (outcome === 'false') return false;
     if (outcome === 'not_found') return core.NOT_FOUND;
     return { fresh: true };
   };
-  if (driver === 'ticker') sandbox._saRefreshTicker_(sheet, 2, 1, 2, 'Nly');
-  else if (driver === 'page') sandbox._refreshSA_Page_('Nly');
-  else sandbox._forceRefreshSA_Page_('Nly');
-  const value = sheet.values[1][3];
+  if (driver === 'ticker') sandbox._saRefreshTicker_(sheet, 2, 1, 2, dataset);
+  else if (driver === 'page') sandbox._refreshSA_Page_(dataset);
+  else sandbox._forceRefreshSA_Page_(dataset);
+  const header = sandbox.SA_HEADERS[dataset];
+  const targetColumn = sheet.values[0].indexOf(header);
+  const value = sheet.values[1][targetColumn];
   if (value === (hadExisting ? '{"old":true}' : '')) return { writes: 0 };
   const envelope = JSON.parse(value);
   return { writes: 1, data: JSON.parse(JSON.stringify(envelope.data)) };
 }
 
 for (const driver of Object.keys(policies)) {
-  for (const outcome of ['null', 'thrown', 'false', 'valid', 'not_found']) {
-    for (const hadExisting of [false, true]) {
-      check('adapter wrapper matrix ' + driver + '/' + outcome + '/existing=' + hadExisting, () => {
-        const actual = runRealWrapper(driver, outcome, hadExisting);
-        const wanted = expected(driver, outcome, hadExisting);
-        assert.strictEqual(actual.writes, wanted.writes);
-        if (wanted.writes) assert.deepStrictEqual(actual.data, wanted.data);
-      });
+  for (const dataset of datasets) {
+    for (const outcome of ['null', 'thrown', 'false', 'valid', 'not_found']) {
+      for (const hadExisting of [false, true]) {
+        check('adapter matrix ' + driver + '/' + dataset + '/' + outcome + '/existing=' + hadExisting, () => {
+          const actual = runRealWrapper(driver, dataset, outcome, hadExisting);
+          const wanted = expected(driver, outcome, hadExisting);
+          assert.strictEqual(actual.writes, wanted.writes);
+          if (wanted.writes) assert.deepStrictEqual(actual.data, wanted.data);
+        });
+      }
     }
   }
 }
