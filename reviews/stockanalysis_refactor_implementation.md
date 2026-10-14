@@ -64,13 +64,13 @@ Executed locally against the refactored files using Node.js (a harness, not the 
 
 ## SHA-256
 
-Hashes are computed over the final local file bytes submitted in this revision.
+Hashes are computed over the exact UTF-8 file contents fetched from the submitted GitHub branch.
 
 | File | SHA-256 |
 |---|---|
-| `ScrapeCore.gs` | `e5123ac9a12d30ed45f1d3f422d446fe261ebda21cab217995268f2ae7e7b50f` |
-| `StockAnalysis.gs` | `4845f8121d4d7d1d6bd126dd7ae72032d2aaeb51c9d6c6f2520c8e4889bab8cb` |
-| `test_refactor.js` | `483690b6ef10d5dc9e8a3df76d86010496c34ffdb45fdd203702a93024890b8d` |
+| `ScrapeCore.gs` | `5aab37c5d081c9ce4646804f3afa1fb5058a0b39b4b799818b509aa4df7742d0` |
+| `StockAnalysis.gs` | `6b80f62d21d1d7324a0024689e8e13f67e18de725716e39fbac13016a593c21f` |
+| `test_refactor.js` | `373ff4897e874cba9e897abfa0747221d0293c80dccdd2c7054e3cb47db23b94` |
 
 ## Decision requested
 
