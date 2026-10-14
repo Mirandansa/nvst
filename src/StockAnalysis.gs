@@ -374,7 +374,7 @@ function _saNormalizeMonthPeriod_(d) {
 function _saTablesByHeading_(html) {
   var mapping = {};
   var current = null;
-  var re = /<(h2|table)[^>]*>[\s\S]*?<\/>/gi;
+  var re = /<(h2|table)\b[^>]*>[\s\S]*?<\/\1>/gi;
   var match;
   while ((match = re.exec(html)) !== null) {
     var element = match[0];
