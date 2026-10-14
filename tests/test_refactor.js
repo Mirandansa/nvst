@@ -1,6 +1,7 @@
 const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert');
+const crypto = require('crypto');
 
 const logs = [];
 const sleeps = [];
@@ -19,9 +20,14 @@ const sandbox = {
   SpreadsheetApp: {},
   __response: { code: 200, body: '<html></html>' }
 };
+sandbox.Date = class SandboxDate extends Date {};
+sandbox.Date.now = Date.now;
 vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync(__dirname + '/ScrapeCore.gs', 'utf8'), sandbox, { filename: 'ScrapeCore.gs' });
-vm.runInContext(fs.readFileSync(__dirname + '/StockAnalysis.gs', 'utf8'), sandbox, { filename: 'StockAnalysis.gs' });
+const coreSource = fs.readFileSync(__dirname + '/ScrapeCore.gs', 'utf8');
+const adapterSource = fs.readFileSync(__dirname + '/StockAnalysis.gs', 'utf8');
+const sha256 = (source) => crypto.createHash('sha256').update(source, 'utf8').digest('hex');
+vm.runInContext(coreSource, sandbox, { filename: 'ScrapeCore.gs' });
+vm.runInContext(adapterSource, sandbox, { filename: 'StockAnalysis.gs' });
 const core = sandbox.ScrapeCore;
 
 let passed = 0;
@@ -39,6 +45,41 @@ check('generic HTML helpers', () => {
   assert.strictEqual(core.elements('<table><tr><td>1</td></tr></table>', 'table').length, 1);
   assert.strictEqual(core.cells('<tr><th>A</th><td>2</td></tr>').length, 2);
   assert.strictEqual(core.innerHtml('<p class="x">value</p>', 'p'), 'value');
+});
+
+check('forecast heading parser pairs headings with complete tables', () => {
+  const html = [
+    '<h2>Revenue Forecast</h2>',
+    '<table id="revenue"><tr><td>Revenue</td></tr></table>',
+    '<h2>EPS Forecast</h2>',
+    '<table id="eps"><tr><td>EPS</td></tr></table>'
+  ].join('');
+  const byHeading = sandbox._saTablesByHeading_(html);
+  assert.ok(byHeading['Revenue Forecast'].includes('id="revenue"'));
+  assert.ok(byHeading['EPS Forecast'].includes('id="eps"'));
+  assert.strictEqual(Object.keys(byHeading).length, 2);
+});
+
+check('adapter core API and boundary are complete', () => {
+  const used = Array.from(
+    adapterSource.matchAll(/\bScrapeCore\.([A-Za-z_$][\w$]*)/g),
+    (match) => match[1]
+  );
+  const missing = [...new Set(used)].filter((name) => !(name in core));
+  assert.deepStrictEqual(missing, []);
+
+  const required = [
+    'runRefresh', 'cleanCell', 'elements', 'innerHtml', 'cells',
+    'openingTag', 'text', 'attr', 'hasClass', 'parseDate',
+    'findColumn', 'fetchHtml', 'NOT_FOUND'
+  ];
+  for (const symbol of required) {
+    assert.ok(symbol in core, 'ScrapeCore.' + symbol + ' must be exported');
+  }
+  assert.doesNotMatch(
+    coreSource,
+    /\bSA_[A-Za-z0-9_$]*\b|\bJdg\b|_needsRefresh_|_saJdgNonEmpty_/
+  );
 });
 
 check('generic cell cleaning', () => {
@@ -225,6 +266,84 @@ check('batch limits and periodic/final flushes', () => {
   assert.strictEqual(sleeps.filter((x) => x === 1).length, 20);
 });
 
+check('runner selection, due-state, cap callbacks, and write injection', () => {
+  const rows = [
+    { index: 0, ticker: 'us-A', value: '' },
+    { index: 1, ticker: '', value: '' },
+    { index: 2, ticker: 'us-B', value: '' },
+    { index: 3, ticker: 'us-C', value: 'fresh' }
+  ];
+  const written = [];
+  let selection;
+  let cap;
+  const result = core.runRefresh({
+    rows,
+    eligibilityPredicate: (row) => Boolean(row.ticker),
+    needsRefresh: (row) => row.value !== 'fresh',
+    fetch: (row) => ({ ticker: row.ticker }),
+    policy: { onTransientFailure: 'preserve_existing' },
+    maxRows: 1,
+    onSelection: (...args) => { selection = args; },
+    onCapped: (...args) => { cap = args; },
+    write: (row, value) => written.push({ index: row.index, value })
+  });
+  assert.deepStrictEqual(selection, [2, 4, 3]);
+  assert.deepStrictEqual(cap, [2, 1]);
+  assert.strictEqual(result.dueCount, 2);
+  assert.strictEqual(result.selectedCount, 1);
+  assert.strictEqual(result.processedCount, 1);
+  assert.strictEqual(result.writeCount, 1);
+  assert.strictEqual(written[0].index, 0);
+});
+
+check('runner time budget invokes callback and stops processing', () => {
+  const originalNow = sandbox.Date.now;
+  const times = [100, 100, 102];
+  sandbox.Date.now = () => times.length ? times.shift() : 102;
+  try {
+    let fetched = 0;
+    let budget;
+    const result = core.runRefresh({
+      rows: [
+        { index: 0, ticker: 'us-A', value: '' },
+        { index: 1, ticker: 'us-B', value: '' }
+      ],
+      timeBudgetMs: 1,
+      fetch: () => { fetched++; return { ok: true }; },
+      policy: { onTransientFailure: 'preserve_existing' },
+      onTimeBudget: (...args) => { budget = args; }
+    });
+    assert.strictEqual(fetched, 1);
+    assert.deepStrictEqual(budget, [1, 2]);
+    assert.strictEqual(result.processedCount, 1);
+  } finally {
+    sandbox.Date.now = originalNow;
+  }
+});
+
+check('runner exposes exception and false-result callbacks', () => {
+  let exceptionCalls = 0;
+  let falseCalls = 0;
+  core.runRefresh({
+    rows: [
+      { index: 0, ticker: 'us-ERR', value: '' },
+      { index: 1, ticker: 'us-FALSE', value: '' }
+    ],
+    fetch: (row) => {
+      if (row.ticker === 'us-ERR') throw new Error('expected');
+      return false;
+    },
+    policy: {
+      onException: 'preserve_or_empty',
+      onFalse: 'preserve_or_empty'
+    },
+    onException: () => { exceptionCalls++; },
+    onFalse: () => { falseCalls++; }
+  });
+  assert.strictEqual(exceptionCalls, 1);
+  assert.strictEqual(falseCalls, 1);
+});
+
 check('404 sentinel preserves parser-specific legacy behavior', () => {
   sandbox.__response = { code: 404, body: 'missing' };
   assert.strictEqual(sandbox.SA_Icm('us-TEST'), core.NOT_FOUND);
@@ -245,3 +364,5 @@ check('StockAnalysis entry points and adapter loaded', () => {
 });
 
 console.log('\nRESULT: ' + passed + ' checks passed; 0 failed.');
+console.log('SHA-256 ScrapeCore.gs: ' + sha256(coreSource));
+console.log('SHA-256 StockAnalysis.gs: ' + sha256(adapterSource));
